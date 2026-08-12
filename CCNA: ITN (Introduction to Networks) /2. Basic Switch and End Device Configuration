@@ -1,0 +1,206 @@
+# Module 2: Basic Switch and End Device Configuration — Rangkuman
+
+> Sumber: Cisco Networking Academy — *Introduction to Networks v7.0 (ITN)*, Module 2
+
+## 1. Akses ke Cisco IOS
+
+**Operating System (OS)** terdiri dari 3 bagian utama:
+- **Shell** — antarmuka yang menerima perintah dari user, bisa lewat CLI (Command Line Interface) atau GUI (Graphical User Interface).
+- **Kernel** — jembatan komunikasi antara hardware dan software, mengatur pemakaian resource hardware.
+- **Hardware** — komponen fisik perangkat.
+
+**GUI vs CLI**
+GUI lebih mudah dipakai karena berbasis ikon/menu (contoh: Windows, macOS, Android). Tapi GUI bisa crash/tidak stabil, sehingga perangkat jaringan (switch/router) biasanya dikonfigurasi lewat **CLI**.
+
+**Cara mengakses perangkat Cisco IOS:**
+- **Console** — port fisik untuk konfigurasi awal/maintenance langsung ke perangkat.
+- **SSH (Secure Shell)** — koneksi CLI jarak jauh yang **aman/terenkripsi**. Ini metode yang **direkomendasikan**.
+- **Telnet** — koneksi CLI jarak jauh tapi **tidak aman** (username, password, dan perintah dikirim dalam bentuk plaintext/tidak terenkripsi).
+
+Untuk mengakses lewat console/SSH/Telnet, dipakai **terminal emulation program** seperti **PuTTY**, **Tera Term**, atau **SecureCRT**.
+
+## 2. Navigasi IOS
+
+**Mode Perintah Utama:**
+- **User EXEC Mode** — hanya bisa menjalankan perintah monitoring dasar. Prompt diakhiri simbol **`>`**.
+- **Privileged EXEC Mode** — bisa mengakses semua perintah & fitur. Prompt diakhiri simbol **`#`**.
+
+**Mode Konfigurasi:**
+- **Global Configuration Mode** — untuk mengakses opsi konfigurasi perangkat secara umum.
+- **Line Configuration Mode** — untuk mengonfigurasi akses console, SSH, Telnet, atau AUX.
+- **Interface Configuration Mode** — untuk mengonfigurasi port switch atau interface router.
+
+**Perintah navigasi penting:**
+| Dari | Ke | Perintah |
+|---|---|---|
+| User EXEC | Privileged EXEC | `enable` |
+| Privileged EXEC | Global Config | `configure terminal` |
+| Global Config | Privileged EXEC | `exit` |
+| Sub-config mode apa pun | Global Config | `exit` |
+| Sub-config mode apa pun | Privileged EXEC | `end` atau `Ctrl+Z` |
+
+## 3. Struktur Perintah (Command Structure)
+
+Sebuah perintah IOS terdiri dari:
+- **Keyword** — parameter yang sudah ditentukan sistem (contoh: `ip protocols`).
+- **Argument** — nilai yang ditentukan sendiri oleh user (contoh: `192.168.10.5`).
+
+**Konvensi penulisan sintaks:**
+| Simbol | Arti |
+|---|---|
+| **Bold** | Perintah/keyword yang ditulis persis seperti tampilannya |
+| *Italic* | Argument yang nilainya diisi user |
+| `[x]` | Elemen opsional |
+| `{x}` | Elemen wajib |
+| `[x {y \| z}]` | Pilihan wajib di dalam elemen opsional |
+
+**Fitur bantuan IOS:**
+- **Context-sensitive help** — mengetik `?` untuk melihat daftar perintah yang tersedia di mode tersebut.
+- **Command syntax check** — IOS otomatis mendeteksi & memberi tahu jika ada kesalahan penulisan perintah.
+
+**Hot keys & shortcut penting:**
+| Tombol | Fungsi |
+|---|---|
+| `Tab` | Melengkapi perintah otomatis |
+| `Backspace` | Menghapus karakter di kiri kursor |
+| `Ctrl+B` / panah kiri | Geser kursor ke kiri |
+| `Ctrl+F` / panah kanan | Geser kursor ke kanan |
+| `Ctrl+P` / panah atas | Menampilkan perintah sebelumnya (history) |
+| `Ctrl+C` | Keluar dari mode konfigurasi, kembali ke Privileged EXEC |
+| `Ctrl+Z` | Sama seperti Ctrl+C |
+| `Ctrl+Shift+6` | Membatalkan proses (misalnya ping/traceroute yang macet) |
+
+Perintah juga bisa disingkat, contoh: `configure` → `conf`, selama masih unik/tidak ambigu.
+
+## 4. Konfigurasi Dasar Perangkat
+
+**Memberi nama perangkat (hostname):**
+Aturan penamaan: diawali huruf, tanpa spasi, diakhiri huruf/angka, hanya boleh huruf/angka/dash, maksimal 63 karakter.
+```
+Switch(config)# hostname NamaSwitch
+```
+
+**Panduan password yang baik:**
+- Lebih dari 8 karakter.
+- Kombinasi huruf besar-kecil, angka, dan simbol.
+- Jangan pakai password yang sama di semua perangkat.
+- Hindari kata-kata umum yang mudah ditebak.
+
+**Mengamankan akses:**
+- **User EXEC (console):**
+```
+Switch(config)# line console 0
+Switch(config-line)# password [password]
+Switch(config-line)# login
+```
+- **Privileged EXEC:**
+```
+Switch(config)# enable secret [password]
+```
+- **VTY (akses remote via Telnet/SSH):**
+```
+Switch(config)# line vty 0 15
+Switch(config-line)# password [password]
+Switch(config-line)# login
+```
+
+**Enkripsi password:**
+```
+Switch(config)# service password-encryption
+```
+Perintah ini mengenkripsi semua password plaintext yang tersimpan di file konfigurasi.
+
+**Banner pesan (MOTD - Message of the Day):**
+```
+Switch(config)# banner motd # Pesan peringatan di sini #
+```
+Berguna untuk memperingatkan pihak yang tidak berwenang agar tidak mengakses perangkat.
+
+## 5. Menyimpan Konfigurasi
+
+Ada 2 file konfigurasi penting:
+- **running-config** — konfigurasi yang sedang aktif, tersimpan di **RAM** (volatile, hilang jika perangkat mati/restart).
+- **startup-config** — konfigurasi yang tersimpan di **NVRAM**, dipakai saat perangkat startup/reboot (tidak hilang saat mati).
+
+**Menyimpan running-config ke startup-config:**
+```
+Switch# copy running-config startup-config
+```
+
+**Membatalkan perubahan yang belum disimpan:**
+- Hapus perintah yang salah satu per satu, atau
+- `reload` (perangkat akan restart, jaringan sempat terputus sebentar).
+
+**Menghapus semua konfigurasi tersimpan:**
+```
+Switch# erase startup-config
+Switch# reload
+```
+
+Konfigurasi juga bisa disimpan ke file teks lewat terminal emulator (PuTTY/Tera Term) dengan mengaktifkan fitur *logging* lalu menjalankan `show running-config` atau `show startup-config`.
+
+## 6. Port dan Alamat (Ports & Addresses)
+
+**IP Address**
+- Fungsi utama IP address adalah membuat perangkat bisa saling menemukan dan berkomunikasi di jaringan.
+- **IPv4** — ditulis dalam *dotted decimal notation*, 4 angka desimal (0–255) dipisah titik.
+- **Subnet mask** — nilai 32-bit yang memisahkan bagian network dan host dari sebuah alamat IP.
+- **Default gateway** — alamat IP router yang dipakai host untuk mengakses jaringan lain/internet.
+- **IPv6** — panjang 128 bit, ditulis dalam format heksadesimal dipisah tanda titik dua (`:`), tidak case-sensitive.
+
+**Media Jaringan**
+Jenis media: kabel twisted-pair (tembaga), fiber-optic, coaxial, atau wireless. Perbedaannya terletak pada jarak jangkauan, lingkungan pemasangan, kecepatan transmisi data, dan biaya.
+
+## 7. Konfigurasi Alamat IP
+
+**Konfigurasi manual (Windows PC):**
+Control Panel → Network Sharing Center → Change adapter settings → klik kanan adapter → Properties → pilih **Internet Protocol Version 4 (TCP/IPv4)** → isi IP address, subnet mask, dan default gateway.
+
+**Konfigurasi otomatis (DHCP):**
+Sama seperti di atas, tapi pilih opsi **"Obtain an IP address automatically"** dan **"Obtain DNS server address automatically"**. (Untuk IPv6, otomasi memakai **DHCPv6** atau **SLAAC**.)
+
+**Konfigurasi SVI (Switch Virtual Interface):**
+Diperlukan agar switch bisa diakses/dikelola dari jarak jauh.
+```
+Switch(config)# interface vlan 1
+Switch(config-if)# ip address [ip-address] [subnet-mask]
+Switch(config-if)# no shutdown
+```
+
+## 8. Verifikasi Konektivitas
+
+- Interface pada switch/router harus diaktifkan dengan perintah `no shutdown` sebelum bisa dipakai.
+- Perintah **`ping`** dipakai untuk menguji konektivitas end-to-end antar perangkat (misalnya antar-PC atau antar-switch).
+
+## Poin-Poin Kunci (Ringkasan Singkat)
+
+- Setiap end device dan network device butuh **operating system (OS)**.
+- Cisco IOS punya dua mode akses utama: **User EXEC** (`>`) dan **Privileged EXEC** (`#`).
+- Dari **Global Configuration Mode**, kita bisa masuk ke berbagai sub-mode konfigurasi lain.
+- Setiap perintah IOS punya format/sintaks tertentu dan hanya bisa dijalankan di mode yang sesuai.
+- Konfigurasi dasar perangkat meliputi: **hostname, password, enkripsi password, dan banner**.
+- Ada dua file konfigurasi: **startup-config** (di NVRAM) dan **running-config** (di RAM).
+- Setiap end device perlu **IP address** agar bisa saling berkomunikasi di jaringan.
+
+---
+
+## Istilah & Perintah Penting
+
+| Istilah / Perintah | Arti Singkat |
+|---|---|
+| CLI / GUI | Antarmuka berbasis teks / berbasis grafis |
+| Console / SSH / Telnet | Metode akses ke perangkat (fisik / remote aman / remote tidak aman) |
+| User EXEC / Privileged EXEC | Mode akses terbatas (`>`) / mode akses penuh (`#`) |
+| `enable` | Masuk ke Privileged EXEC mode |
+| `configure terminal` | Masuk ke Global Configuration mode |
+| `exit` / `end` | Keluar satu level / langsung ke Privileged EXEC |
+| `hostname` | Mengatur nama perangkat |
+| `enable secret` | Mengatur password Privileged EXEC (terenkripsi) |
+| `service password-encryption` | Mengenkripsi semua password di file konfigurasi |
+| `banner motd` | Membuat pesan peringatan saat login |
+| `copy running-config startup-config` | Menyimpan konfigurasi aktif secara permanen |
+| `running-config` / `startup-config` | Konfigurasi aktif di RAM / konfigurasi tersimpan di NVRAM |
+| `reload` | Merestart perangkat |
+| DHCP | Protokol pemberian IP address otomatis |
+| SVI (Switch Virtual Interface) | Interface virtual untuk mengelola switch dari jarak jauh |
+| `ping` / `traceroute` | Menguji konektivitas antar perangkat |
